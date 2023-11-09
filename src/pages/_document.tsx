@@ -37,7 +37,7 @@ export default class MyDocument extends Document {
     return (
       <Html lang="pt-BR">
         <Head>
-          <meta name="description" content="Sistema de cadastro e login" />
+          <meta name="description" content="Conversor de moedas" />
         </Head>
         <body>
           <Main />

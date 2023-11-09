@@ -108,7 +108,7 @@ export default function Home() {
             </H.CurrencyContainer>
             <H.InputLabel>Valor</H.InputLabel>
             <H.CurrencyContainer>
-              <H.Input type="text" {...register('firstValue')} />
+              <H.Input readOnly type="text" {...register('firstValue')} />
             </H.CurrencyContainer>
           </H.InputContainer>
           <H.ArrowIcon />
@@ -129,7 +129,7 @@ export default function Home() {
             </H.CurrencyContainer>
             <H.InputLabel>Valor</H.InputLabel>
             <H.CurrencyContainer>
-              <H.Input type="text" {...register('secondValue')} />
+              <H.Input readOnly type="text" {...register('secondValue')} />
             </H.CurrencyContainer>
           </H.InputContainer>
         </H.CurrencyContainer>
