@@ -80,7 +80,7 @@ export default function Home() {
       if (response === 'ok') {
         setTimeout(() => {
           binance(data);
-        }, 3000);
+        }, 30000);
       } else {
         console.error('[ERROR] Erro na segunda chamada');
       }
