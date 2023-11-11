@@ -12,6 +12,7 @@ export const CurrencyContainer = styled.div`
   display: flex;
   gap: 5px;
   justify-content: space-around;
+  align-items: center;
 `;
 export const FormContainer = styled.form`
   background-color: #333333;
@@ -53,17 +54,22 @@ export const Input = styled.input`
   border-radius: 5px;
   width: 90%;
   padding-left: 10px;
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    appearance: none;
-    display: none;
+  text-transform: uppercase;
+  &::placeholder {
+    color: #ff7a7a;
+    opacity: 60%;
+    font-weight: bold;
   }
+`;
+
+export const ValueSpan = styled.span`
+  color: #fff;
 `;
 export const ArrowIcon = styled(BsArrowRight)`
   width: 20px;
   height: 20px;
   position: absolute;
-  bottom: 145px;
+  top: 150px;
   color: white;
 `;
 export const SelectInput = styled.select`
@@ -71,6 +77,8 @@ export const SelectInput = styled.select`
   border: none; /* Cor de fundo */ /* Cor do texto */
   border-radius: 5px; /* Cantos arredondados */
   cursor: pointer;
+  align-self: self-start;
+  height: 22px;
   &:focus {
     outline: none;
   }

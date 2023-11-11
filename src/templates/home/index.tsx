@@ -1,26 +1,62 @@
 import { useState } from 'react';
 import * as H from './style';
 import { useForm, SubmitHandler } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import { api } from 'src/utils/api';
-import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-interface FormType {
-  firstCurrency: string;
-  secondCurrency: string;
-  firstValue: string;
-  secondValue: string;
-  firstSelect: string;
-  secondSelect: string;
-}
+import ModalError from 'src/components/modalError';
 
+// Crie um schema Yup correspondente à sua interface FormType
+const schema = yup.object().shape({
+  firstCurrency: yup
+    .string()
+    .transform((value, originalValue) => {
+      // Remova todos os espaços em branco da string original
+      if (originalValue) {
+        return originalValue.replace(/\s/g, '');
+      }
+      return value;
+    })
+    .trim()
+    .required('Preencha'),
+  secondCurrency: yup
+    .string()
+    .transform((value, originalValue) => {
+      // Remova todos os espaços em branco da string original
+      if (originalValue) {
+        return originalValue.replace(/\s/g, '');
+      }
+      return value;
+    })
+    .trim()
+    .required('Preencha '),
+  firstSelect: yup.string().trim(),
+  secondSelect: yup.string().trim()
+});
+type FormType = yup.InferType<typeof schema>;
 export default function Home() {
-  const { register, handleSubmit, setValue } = useForm<FormType>();
-  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors }
+  } = useForm<FormType>({
+    resolver: yupResolver(schema)
+  });
   const [firstRecentCript, setFirstRecentCript] = useState<string[]>([]);
   const [secondRecentCript, setSecondRecentCript] = useState<string[]>([]);
-  const onsubmit: SubmitHandler<FormType> = async data => {
+  const [currencyFirstCript, setCurrencyFirstCript] = useState('');
+  const [currencySecondCript, setCurrencySecondCript] = useState('');
+  const [firstValueCript, setFirstValueCript] = useState(0);
+  const [secondValueCript, setSecondValueCript] = useState(0);
+  const onSubmit: SubmitHandler<FormType> = async data => {
     data.firstCurrency = data.firstCurrency.toUpperCase();
     data.secondCurrency = data.secondCurrency.toUpperCase();
+
+    setCurrencyFirstCript(data.firstCurrency);
+    setCurrencySecondCript(data.secondCurrency);
     if (!secondRecentCript.includes(data.secondCurrency)) {
       const updatedSecondRecentCript = [
         data.secondCurrency,
@@ -38,23 +74,24 @@ export default function Home() {
       }
       setFirstRecentCript(updatedFirstRecentCript);
     }
-    setLoading(true);
 
     try {
-      await binance(data);
+      const response = await binance(data);
+      if (response === 'ok') {
+        setTimeout(() => {
+          binance(data);
+        }, 3000);
+      } else {
+        console.error('[ERROR] Erro na segunda chamada');
+      }
     } catch (error) {
       console.error('Erro na chamada binance:', error);
-    } finally {
-      setLoading(false);
-    }
-    if (!loading) {
-      setTimeout(() => {
-        binance(data);
-      }, 30000);
     }
   };
   const binance = async (crypts: FormType) => {
     const crypt = crypts.firstCurrency + crypts.secondCurrency;
+    console.log(crypts);
+
     try {
       const response = await api.get('/price', {
         params: {
@@ -63,13 +100,15 @@ export default function Home() {
       });
       const data = response.data.price;
       const secondValueString = data;
-
-      setValue('firstValue', '1');
-      setValue('secondValue', secondValueString);
-      setLoading(false);
+      const fixedNumber = parseFloat(secondValueString);
+      fixedNumber.toFixed(2);
+      setSecondValueCript(fixedNumber);
+      setFirstValueCript(1);
+      return 'ok';
     } catch (error) {
       if (error) {
-        toast.error('Selecione um par válido');
+        setShowModal(true);
+        return error;
       }
       console.log(error);
     }
@@ -85,14 +124,19 @@ export default function Home() {
 
   return (
     <H.Container>
-      <ToastContainer />
-      <H.FormContainer onSubmit={handleSubmit(onsubmit)}>
+      <ModalError setShowModal={setShowModal} showModal={showModal} />
+      <H.FormContainer onSubmit={handleSubmit(onSubmit)}>
         <H.Title>Convertendo moedas digitais</H.Title>
         <H.CurrencyContainer>
           <H.InputContainer>
             <H.InputLabel>Escolha a moeda desejada</H.InputLabel>
             <H.CurrencyContainer>
-              <H.Input type="text" {...register('firstCurrency')} />
+              <H.Input
+                placeholder={errors?.firstCurrency?.message}
+                type="text"
+                {...register('firstCurrency')}
+              />
+
               {firstRecentCript.length > 0 && (
                 <H.SelectInput
                   {...register('firstSelect')}
@@ -106,16 +150,23 @@ export default function Home() {
                 </H.SelectInput>
               )}
             </H.CurrencyContainer>
-            <H.InputLabel>Valor</H.InputLabel>
             <H.CurrencyContainer>
-              <H.Input readOnly type="text" {...register('firstValue')} />
+              <H.ValueSpan>
+                {firstValueCript}
+                {currencyFirstCript}
+              </H.ValueSpan>
             </H.CurrencyContainer>
           </H.InputContainer>
           <H.ArrowIcon />
           <H.InputContainer>
             <H.InputLabel>Escolha a moeda desejada</H.InputLabel>
             <H.CurrencyContainer>
-              <H.Input type="text" {...register('secondCurrency')} />
+              <H.Input
+                type="text"
+                {...register('secondCurrency')}
+                placeholder={errors?.secondCurrency?.message}
+              />
+
               {secondRecentCript.length > 0 && (
                 <H.SelectInput
                   {...register('secondSelect')}
@@ -127,9 +178,11 @@ export default function Home() {
                 </H.SelectInput>
               )}
             </H.CurrencyContainer>
-            <H.InputLabel>Valor</H.InputLabel>
             <H.CurrencyContainer>
-              <H.Input readOnly type="text" {...register('secondValue')} />
+              <H.ValueSpan>
+                {secondValueCript}
+                {currencySecondCript}
+              </H.ValueSpan>
             </H.CurrencyContainer>
           </H.InputContainer>
         </H.CurrencyContainer>
